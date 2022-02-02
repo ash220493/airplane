@@ -52,13 +52,6 @@ const createFirstForm = () => {
   return form;
 };
 
-
-
-
-
-
-
-
 const start = (app, title) => {
   const h1 = createTitle(title);
   const main = createMain();
