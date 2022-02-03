@@ -105,26 +105,38 @@ const createAirplane = (title, tourData) => {
   return choisesSeat;
 };
 
-const checkSeat = (form, data) => {
-  debugger
-  console.log(data);
-  console.log(form);
+const checkSeat = (form, data, main) => {
   form.addEventListener('change', () => {
-    console.log('change');
     const formData = new FormData(form);
     const checked = [...formData].map(([, value]) => value);
-    console.log(checked);
-    console.log(value);
     if (checked.length === data.length) {
       [...form].forEach(item => {
-        console.log(item);
-        if (item.checked === false && item.name === 'seat') {
-          item.disabled = true;
-          console.log(item.disabled);
-        }
-      })
-    }
+      if (item.checked === false && item.name === 'seat') {
+        item.disabled = true;
+      }
+    })
+    } else [...form].forEach(item => {
+        item.disabled = false;
+    })
   });
+
+  form.addEventListener('submit', (event) => {
+    event.preventDefault();
+    const formData = new FormData(form);
+    const booking = [...formData].map(([, value]) => value);
+
+    for(let i = 0; i < data.length; i++) {
+      data[i].seat = booking[i];
+    }
+    console.log('data: ', data);
+    form.remove();
+    const result = createElement('p', {
+      textContent: `Спасибо хорошего полёта, ваши места ${[...booking]}`
+    });
+    console.log(result);
+    main.append(result);
+  });
+  
 };
 
 const airplane = (main, data, tourData) => {
@@ -137,10 +149,9 @@ const airplane = (main, data, tourData) => {
   };
 
   const choiseForm = createAirplane(title, tourData);
-
-  checkSeat(choiseForm, data);
-
-  main.append(createAirplane(title, tourData));
+  main.append(choiseForm);
+  const result = checkSeat(choiseForm, data, main);
+  
 
 };
 
