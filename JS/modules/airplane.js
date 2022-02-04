@@ -1,3 +1,4 @@
+import { setStorage, getStorage } from "../Service/storage.js";
 import createElement from "./createElement.js";
 
 const createCockpit = (titleText) => {
@@ -14,6 +15,7 @@ const createCockpit = (titleText) => {
     className: 'cockpit-confirm',
     type: 'submit',
     textContent: 'Подтвердить',
+    disabled: true,
   });
 
   cockpit.append(title, button);
@@ -29,7 +31,7 @@ const createExit = () => {
   return fuselage;
 };
 
-const createBlockSeat = (n, count) => {
+const createBlockSeat = (n, count, bookingSeat) => {
   const letters = ['A', 'B', 'C', 'D', "E", 'F'];
 
   const fuselage = createElement('ol', {
@@ -48,11 +50,13 @@ const createBlockSeat = (n, count) => {
       });
 
       const wrapperCheck = createElement('label');
-
+      const seatValue = `${i}${letter}`
       const check = createElement('input', {
         name: 'seat',
         type: 'checkbox',
-        value: `${i}${letter}`,
+        value: seatValue,
+        disabled: bookingSeat.includes(seatValue),
+
 
       });
       
@@ -72,6 +76,7 @@ const createBlockSeat = (n, count) => {
 
 const createAirplane = (title, tourData) => {
   const scheme = tourData.scheme;
+  const bookingSeat = getStorage(tourData.id).map(item => item.seat)
   const choisesSeat = createElement('form', {
     className: 'choises-seat',
   }); 
@@ -92,7 +97,7 @@ const createAirplane = (title, tourData) => {
     }
 
     if(typeof type === 'number') {
-      const blockSeat = createBlockSeat(n, type);
+      const blockSeat = createBlockSeat(n, type, bookingSeat);
       n = n + type;
 
       return blockSeat;
@@ -105,7 +110,7 @@ const createAirplane = (title, tourData) => {
   return choisesSeat;
 };
 
-const checkSeat = (form, data, main) => {
+const checkSeat = (form, data, main, id) => {
   form.addEventListener('change', () => {
     const formData = new FormData(form);
     const checked = [...formData].map(([, value]) => value);
@@ -114,7 +119,9 @@ const checkSeat = (form, data, main) => {
       if (item.checked === false && item.name === 'seat') {
         item.disabled = true;
       }
-    })
+    }) 
+    const okBtn = document.querySelector('.cockpit-confirm');
+    okBtn.disabled = false;
     } else [...form].forEach(item => {
         item.disabled = false;
     })
@@ -128,13 +135,25 @@ const checkSeat = (form, data, main) => {
     for(let i = 0; i < data.length; i++) {
       data[i].seat = booking[i];
     }
-    console.log('data: ', data);
+    
+    setStorage(id, data);
+
     form.remove();
-    const result = createElement('p', {
-      textContent: `Спасибо хорошего полёта, ваши места ${[...booking]}`
+
+
+
+    const resultSingle = createElement('h1', {
+      className: 'title',
+      textContent: `Спасибо хорошего полёта!`
+    
     });
-    console.log(result);
-    main.append(result);
+    const resultMulti = createElement('h2', {
+      className: 'title',
+      textContent: `${booking.length === 1 ? 
+        `Ваше место ${booking}` : `Ваши места: ${[...booking]}`}`
+    })
+    main.append(resultSingle, resultMulti);
+    
   });
   
 };
@@ -150,7 +169,7 @@ const airplane = (main, data, tourData) => {
 
   const choiseForm = createAirplane(title, tourData);
   main.append(choiseForm);
-  const result = checkSeat(choiseForm, data, main);
+  checkSeat(choiseForm, data, main, tourData.id);
   
 
 };
